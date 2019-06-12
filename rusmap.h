@@ -67,7 +67,7 @@
 #define RU_UNDERSCORE    LSFT(KC_MINUS)     // _
 #define RU_EQUAL         KC_EQUAL           // =
 #define RU_PLUS          KC_PLUS            // +
-#define RU_BSLASH        KC_BSLASH          // \
+#define RU_BSLASH        KC_BSLASH          /* \ */
 #define RU_SLASH         LSFT(RU_BACKSLASH) // /
 #define RU_DOT           KC_SLSH            // .
 #define RU_COMMA         LSFT(KC_SLSH)      // ,
@@ -83,8 +83,10 @@
 #define RU_ASTR RU_ASTERISK                 // *
 #define RU_LPRN RU_LEFT_PAREN               // (
 #define RU_RPRN RU_RIGHT_PAREN              // )
-#define RU_BSLS RU_BSLASH                   // \
+#define RU_BSLS RU_BSLASH                   /* \ */
 #define RU_SLSH RU_SLASH                    // /
 #define RU_COMM RU_COMMA                    // ,
+#define RU_EQL  RU_EQUAL                    // =
+#define RU_UNDS RU_UNDERSCORE               // _
 
 #endif
