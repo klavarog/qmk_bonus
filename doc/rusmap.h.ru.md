@@ -91,5 +91,5 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   LAYOUT(RU_J,  RU_TS, RU_U,  RU_K,  RU_E,  RU_N,  RU_G,    RU_SH, RU_SHCH, RU_Z,   RU_H,
          RU_F,  RU_Y,  RU_V,  RU_A,  RU_P,  RU_R,  RU_O,    RU_L,  RU_D,    RU_ZH,  RU_E,
          RU_JA, RU_CH, RU_S,  RU_M,  RU_I,  RU_T,  RU_SOFT, RU_B,  RU_JU,   RU_DOT, RU_JO)
-}
+};
 ```
