@@ -34,9 +34,18 @@ class String
   end
 end
 
+
+def brace_expr(title, block)
+  <<-EOK
+#{title} {
+  #{block}
+}
+EOK
+
+# TODO: redo Chord class
 class Chord
-  #def initialize(keys, result, result_is_kc)
   def initialize(left_hand, right_hand)
+    result_is_kc = left_hand[0] == '(' and left_hand[1] == ')'
     if result_is_kc
       @result_id = result
     else
@@ -75,67 +84,41 @@ EOK
 end
 
 class Layer
-  def initialize(name, chords, is_any_layer)
-    @name = name
-    @chords = chords
-  end
-
-  def combo_events; @chords.map(&:combo_event).join; end
-  def combo_arrays; @chords.map(&:combo_array).join; end
-  def combo_keys;   @chords.map(&:combo_key)  .join; end
-  def combo_switch
-    if is_any_layer
-      "  {"
-    else
-      "  if (layer_state & (1 << #{@name})) {"
-    end +
-      <<-EOK
-    switch (combo_index) {
-    #{@chords.map(&:case_expr).join}
-    }
-  }
-EOK
+  attr_reader :combo_events, :combo_arrays, :combo_keys, :combo_switch
+  def initialize(name, chords)
+    @combo_events = chords.map(&:combo_event).join
+    @combo_arrays = chords.map(&:combo_array).join
+    @combo_keys   = chords.map(&:combo_key)  .join
+    @combo_switch =
+      brace_expr(name == 'any' ? "" : "if (layer_state & (1 << #{name}))",
+                 brace_expr('switch (combo_index)',
+                            chords.map(&:case_expr).join))
   end
 end
 
+end
 class ChordedKeeb
   def initialize(layers)
-    @layers = layers
-  end
+    @combo_events_enum =
+      brace_expr("enum combo_events", layers.map(&:combo_events).join)
 
-  def combo_events_enum
-    <<-EOK
-enum combo_events {
-  #{@layers.map(&:combo_events).join}
-}
-EOK
-  end
+    @combo_arrays_declaration =
+      layers.map(&:combo_arrays).join
 
-  def combo_arrays_declataion
-    @layers.map(&:combo_arrays).join
-  end
+    @combo_keys_array =
+      brace_expr("combo_t key_combos[COMBO_COUNT] =",
+                 layers.map(&:combo_keys).join)
 
-  def combo_keys_array
-    <<-EOK
-combo_t key_combos[COMBO_COUNT] = {
-  #{@layers.map(&:combo_keys).join}
-};
-EOK
-  end
-
-  def process_combo_event
-    <<-EOK
-void process_combo_event(uint8_t combo_index, bool pressed) {
-  #{@layers.map(&:combo_switch).join}
-}
-EOK
+    @process_combo_event =
+      brace_expr('void process_combo_event(uint8_t combo_index, bool pressed)',
+                 layers.map(&:combo_switch).join)
   end
 
   def as_string
-    combo_events_enum
-    + combo_arrays_declaration
-    + combo_keys_array
-    + process_combo_event
+    @combo_events_enum
+    + @combo_arrays_declaration
+    + @combo_keys_array
+    + @process_combo_event
   end
 end
 
