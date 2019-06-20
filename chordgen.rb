@@ -41,39 +41,30 @@ def brace_expr(title, block)
   #{block}
 }
 EOK
+end
 
-# TODO: redo Chord class
+# TODO: implement kc
+def kc(k); k; end
+
 class Chord
+  attr_reader :combo_event, :combo_array, :combo_key, :case_expr
   def initialize(left_hand, right_hand)
     result_is_kc = left_hand[0] == '(' and left_hand[1] == ')'
-    if result_is_kc
-      @result_id = result
-    else
-      @result_id = result.hash.to_s
-    end
 
-    @combo_event_id = "combo_event_#{@result_id}"
-    @combo_array_id = "combo_array_#{@result_id}"
-    @keys = keys
+    result    = result_is_kc ?
+                  "tap_code16(#{kc left_hand});\n" :
+                  left_hand[1..-2]
+    result_id = result_is_kc ? result : result.hash.to_s
 
-    if result_is_kc
-      @result = "tap_code16(#{result});\n"
-    else
-      @result = result
-    end
-  end
+    combo_event_id = "combo_event_#{result_id}"
+    combo_array_id = "combo_array_#{result_id}"
+    keys = right_hand.split.map { |k| kc k }
 
-  def combo_event; "  #{@combo_event_id},\n"; end
-  def combo_array
-    "const uint16_t PROGMEM #{@combo_array_id}[] = {
-    #{@keys.join(',')}, COMBO_END
-    };\n"
-  end
-  def combo_key
-    "[#{@combo_event_id}] = COMBO_ACTION(#{@combo_array_id}),\n"
-  end
-  def case_expr
-    <<-EOK
+    @combo_event = "  #{combo_event_id},\n"
+    @combo_array = brace_expr("const uint16_t PROGMEM #{combo_array_id}[] =",
+                              "#{keys.join(',')}, COMBO_END") + ";\n"
+    @combo_key   = "[#{combo_event_id}] = COMBO_ACTION(#{combo_array_id}),\n"
+    @case_expr = <<-EOK
     case #{@combo_event_id}:
       if (pressed) {
         #{@result}
