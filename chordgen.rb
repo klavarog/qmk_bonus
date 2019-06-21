@@ -1,10 +1,57 @@
+# coding: utf-8
 require 'pp'
 
 should_count_chords = false
 config_path = "./chords.ini"
 
-$syms = {}
+$syms = {
+  # ЙЦУКЕН letters
+  'а' => 'RU_A',
+  'б' => 'RU_B',
+  'в' => 'RU_V',
+  'г' => 'RU_G',
+  'д' => 'RU_D',
+  'е' => 'RU_JE',
+  'ё' => 'RU_JO',
+  'ж' => 'RU_ZH',
+  'з' => 'RU_Z',
+  'и' => 'RU_I',
+  'й' => 'RU_J',
+  'к' => 'RU_K',
+  'л' => 'RU_L',
+  'м' => 'RU_M',
+  'н' => 'RU_N',
+  'о' => 'RU_O',
+  'п' => 'RU_P',
+  'р' => 'RU_R',
+  'с' => 'RU_S',
+  'т' => 'RU_T',
+  'у' => 'RU_U',
+  'ф' => 'RU_F',
+  'х' => 'RU_H',
+  'ц' => 'RU_TS',
+  'ч' => 'RU_CH',
+  'ш' => 'RU_SH',
+  'щ' => 'RU_SHCH',
+  'ъ' => 'RU_HARD',
+  'ы' => 'RU_Y',
+  'ь' => 'RU_SOFT',
+  'э' => 'RU_E',
+  'ю' => 'RU_JU',
+  'я' => 'RU_JA',
 
+  # First layer QWERTY symbols
+  '.' => 'KC_DOT',
+  ',' => 'KC_COMM',
+  '/' => 'KC_SLSH',
+  '\\' => 'KC_BSLS',
+  '`' => 'KC_GRAVE',
+  '[' => 'KC_LBRC',
+  ']' => 'KC_RBRC',
+  '-' => 'KC_MINS',
+  '=' => 'KC_EQUAL',
+}
+puts $syms
 ('a'..'z').each { |ch| $syms[ch] = "KC_#{ch.upcase}" }
 ('0'..'9').each { |ch| $syms[ch] = "KC_#{ch}" }
 
