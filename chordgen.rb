@@ -37,6 +37,10 @@ class String
   def empty_line?
     self.strip == ""
   end
+
+  def scln
+    self.insert(-2, ';')
+  end
 end
 
 
@@ -65,15 +69,10 @@ class Chord
 
     @combo_event = "#{combo_event_id}, //#{result.chomp}\n  "
     @combo_array = brace_expr("const uint16_t PROGMEM #{combo_array_id}[] =",
-                              "#{keys.join(', ')}, COMBO_END") + ";\n"
+                              "#{keys.join(', ')}, COMBO_END").scln
     @combo_key   = "[#{combo_event_id}] = COMBO_ACTION(#{combo_array_id}),\n  "
-    @case_expr = <<-EOK
-    case #{combo_event_id}:
-      if (pressed) {
-        #{result}
-      }
-      break;
-EOK
+    @case_expr = brace_expr("    case #{combo_event_id}:",
+                            brace_expr('      if (pressed)', result) + "break;")
   end
 end
 
@@ -86,7 +85,7 @@ class Layer
     @combo_keys   = chords.map(&:combo_key)  .join
     @combo_switch =
       brace_expr(name == 'any' ? "" : "if (layer_state & (1 << #{name}))",
-                 brace_expr('switch (combo_index)',
+                 brace_expr('  switch (combo_index)',
                             chords.map(&:case_expr).join))
   end
 end
@@ -95,18 +94,18 @@ end
 class ChordedKeeb
   def initialize(layers)
     @combo_events_enum =
-      brace_expr("enum combo_events", layers.map(&:combo_events).join)
+      brace_expr("enum combo_events", layers.map(&:combo_events).join).scln
 
     @combo_arrays_declaration =
       layers.map(&:combo_arrays).join
 
     @combo_keys_array =
       brace_expr("combo_t key_combos[COMBO_COUNT] =",
-                 layers.map(&:combo_keys).join)
+                 layers.map(&:combo_keys).join).scln
 
     @process_combo_event =
       brace_expr('void process_combo_event(uint8_t combo_index, bool pressed)',
-                 layers.map(&:combo_switch).join('else '))
+                 layers.map(&:combo_switch).join('  else '))
   end
 
   def as_string
@@ -142,7 +141,7 @@ read_result.shift
 
 
 overrides = read_result.select { |rr| rr[0] == 'override'}
-layers = (read_result - overrides).map do |rr|
+layers = (read_result - overrides).delete_if {|l| l[:contents].empty? }.map do |rr|
   Layer.new(rr[:header],
             rr[:contents].map { |c| Chord.new(c[0], c[1])})
 end
