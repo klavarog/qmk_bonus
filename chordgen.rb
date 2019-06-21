@@ -51,7 +51,7 @@ $syms = {
   '-' => 'KC_MINS',
   '=' => 'KC_EQUAL',
 }
-puts $syms
+
 ('a'..'z').each { |ch| $syms[ch] = "KC_#{ch.upcase}" }
 ('0'..'9').each { |ch| $syms[ch] = "KC_#{ch}" }
 
@@ -131,7 +131,7 @@ class Layer
     @combo_arrays = chords.map(&:combo_array).join
     @combo_keys   = chords.map(&:combo_key)  .join
     @combo_switch =
-      brace_expr(name == 'any' ? "" : "if (layer_state & (1 << #{name}))",
+      brace_expr(name == 'any' ? "if (1)" : "if (layer_state & (1 << #{name}))",
                  brace_expr('  switch (combo_index)',
                             chords.map(&:case_expr).join))
   end
@@ -186,9 +186,15 @@ end
 # First element is promised to be invalid, remove it:
 read_result.shift
 
+# Array of all [override] sections.
+overrides = read_result.select { |rr| rr[:header] == 'override'}
 
-overrides = read_result.select { |rr| rr[0] == 'override'}
-layers = (read_result - overrides).delete_if {|l| l[:contents].empty? }.map do |rr|
+# Applying all overrides. Multiple [override] sections are supported.
+overrides.inject(&:merge)[:contents].each { |ovr| $syms[ovr[0]] = ovr[1] }
+
+layers = (read_result - overrides)
+           .delete_if {|l| l[:contents].empty? }
+           .map do |rr|
   Layer.new(rr[:header],
             rr[:contents].map { |c| Chord.new(c[0], c[1])})
 end
