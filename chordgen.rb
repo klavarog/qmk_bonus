@@ -141,7 +141,7 @@ class Chord
                           kc(left_hand).sans_parens :
                           left_hand)
 
-    result_id      = result.hash.abs.to_s
+    result_id      = (result.hash.abs + right_hand.hash.abs).to_s
 
     combo_event_id = "combo_event_#{result_id}"
     combo_array_id = "combo_array_#{result_id}"
