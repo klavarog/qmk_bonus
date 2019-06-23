@@ -136,7 +136,11 @@ class Chord
 
     result         = result_is_kc ?
                        "tap_code16(#{kc left_hand});\n" :
-                       left_hand.sans_parens
+                       (($syms.include?(left_hand) and
+                         kc(left_hand).in_parens?) ?
+                          kc(left_hand).sans_parens :
+                          left_hand)
+
     result_id      = result.hash.abs.to_s
 
     combo_event_id = "combo_event_#{result_id}"
