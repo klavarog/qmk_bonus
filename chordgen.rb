@@ -155,7 +155,7 @@ class Chord
       "[#{combo_event_id}] = COMBO_ACTION(#{combo_array_id}),\n  "
     @case_expr     =
       brace_expr("    case #{combo_event_id}:",
-                 brace_expr('      if (pressed)', result) + "break;")
+                 brace_expr('      if (pressed)', result) + "return;")
   end
 end
 
