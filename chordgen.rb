@@ -239,5 +239,8 @@ puts $chord_count if should_count_chords
 pp $syms if should_print_syms
 
 if not (should_count_chords or should_print_syms)
+  puts '#ifndef KLAVAROG_CHORDGEN'
+  puts '#define KLAVAROG_CHORDGEN'
   puts ChordedKeeb.new(layers).as_string
+  puts '#endif'
 end
