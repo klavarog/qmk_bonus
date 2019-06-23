@@ -1,9 +1,6 @@
 # coding: utf-8
 require 'pp'
 
-should_count_chords = false
-config_path = "./chords.ini"
-
 $syms = {
   # ЙЦУКЕН letters
   'а' => 'RU_A',
@@ -59,18 +56,38 @@ def kc(k)
   $syms[k]
 end
 
-should_ignore_next_elem_for_config_path = false
-ARGV.each do |arg|
-  if should_ignore_next_elem_for_config_path
-    config_path = arg
-    should_ignore_next_elem_for_config_path = false
-  end
-  if %w[-c --count-chords].include? arg
-    should_count_chords = true
-  elsif %w[-p --config-path].include? arg
-    should_ignore_next_elem_for_config_path = true
-  end
+if ARGV.include? '-h' or ARGV.include? '--help'
+  puts <<-EOK
+chordgen.rb
+© Timur Ismagilov 2019
+
+Chordgen is part of QMK Bonus project:
+https://github.com/klavarog/qmk_bonus
+
+-h, --help
+  Print this message and exit.
+
+--count-chords
+  Print number of chords to generate and exit. Output is meant to be used as
+  value of #define COMBO_COUNT in your config.h. Chords will not be printed if
+  you use this option.
+
+--config <path>
+  Explicitly set <path> as your config file. If you do not set it,
+  ‘./chords.ini’ is used by default.
+
+--print-syms
+  Pretty-print hashmap that contains character definitions after processing
+  config file and exit. Chords will not be printed if you use this option.
+EOK
+  exit
 end
+
+should_count_chords = ARGV.include? '--count-chords'
+should_print_syms = ARGV.include? '--print-syms'
+config_path = ARGV.include?('--config') ?
+                ARGV[ARGV.index('--config') + 1] :
+                './chords.ini'
 
 class String
   def ini_header?
@@ -99,10 +116,12 @@ def brace_expr(title, block)
 EOK
 end
 
+$chord_count = 0
 class Chord
   attr_reader :combo_event, :combo_array, :combo_key, :case_expr
 
   def initialize(left_hand, right_hand)
+    $chord_count += 1
     result_is_kc = not(left_hand[0] == '(' and left_hand[-1] == ')')
 
     result    = result_is_kc ?
@@ -199,4 +218,9 @@ layers = (read_result - overrides)
             rr[:contents].map { |c| Chord.new(c[0], c[1])})
 end
 
-puts ChordedKeeb.new(layers).as_string
+puts $chord_count if should_count_chords
+pp $syms if should_print_syms
+
+if not (should_count_chords or should_print_syms)
+  puts ChordedKeeb.new(layers).as_string
+end
