@@ -102,6 +102,14 @@ class String
     self.strip.empty? or self.start_with? '//'
   end
 
+  def in_parens?
+    self[0] == '(' and self[-1] == ')'
+  end
+
+  def sans_parens
+    self[1..-2]
+  end
+
   def scln
     self.insert(-2, ';')
   end
@@ -122,11 +130,13 @@ class Chord
 
   def initialize(left_hand, right_hand)
     $chord_count += 1
-    result_is_kc = not(left_hand[0] == '(' and left_hand[-1] == ')')
+    result_is_kc = not(left_hand.in_parens?
+                       or ($syms.include?(left_hand)
+                           and kc(left_hand).in_parens?))
 
     result    = result_is_kc ?
                   "tap_code16(#{kc left_hand});\n" :
-                  left_hand[1..-2]
+                  left_hand.sans_parens
     result_id = result.hash.abs.to_s
 
     combo_event_id = "combo_event_#{result_id}"
