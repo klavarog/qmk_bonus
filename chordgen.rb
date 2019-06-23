@@ -99,7 +99,7 @@ class String
   end
 
   def empty_line?
-    self.strip.empty?
+    self.strip.empty? or self.start_with? '//'
   end
 
   def scln
