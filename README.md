@@ -10,19 +10,13 @@ QMK Bonus — набор библиотек, нацеленных на испо�
 
 #### Сделанные
 - `rusmap.h` содержит макросы, делающие создание русской раскладки
-очевиднее:
-
-```c
-// Кусочек из rusmap.h
-#define RU_J  KC_Q
-#define RU_TS KC_W
-```
+очевиднее. [Документация.](./docs/rusmap.h.ru.md)
+- `chordgen` генерирует код для обработки аккордов из таблицы
+аккордов. [Документация.](./docs/chordgen.ru.md)
 
 #### Идеи
 - `layermode.h` упрощает создание двойных клавиш, которые помимо
 модификатора также включают или выключают какой-нибудь слой.
-- `chordgen` генерирует код для обработки аккордов из таблицы
-аккордов.
 
 ## English
 QMK Bonus is a library set to be used with QMK. Those libraries that
@@ -31,15 +25,11 @@ prove their versatility will be pull-requested to QMK.
 ### Libraries
 
 #### Done
-- `rusmap.h` eases creating Russian layouts:
-
-```c
-// An extract from rusmap.h
-#define RU_J  KC_Q
-#define RU_TS KC_W
-```
+- `rusmap.h` eases creating Russian layouts. [Docs in
+  Russian.](./docs/rusmap.h.ru.md) English coming soon.
+- `chordgen` generates chord processing code from a chord table. [Docs
+  in Russian.](./docs/chordgen.ru.md) English coming soon.
 
 #### Ideas
 - `layermode.h` eases creating keys that both triggers a modifier and
 turns on or off a layer.
-- `chordgen` generates chord processing code from a chord table.
