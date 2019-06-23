@@ -91,7 +91,7 @@ config_path = ARGV.include?('--config') ?
 
 class String
   def ini_header?
-    self.match? /^\[(.*)\]$/
+    /^\[(.*)\]$/.match?(self)
   end
 
   def as_ini_header
@@ -99,7 +99,7 @@ class String
   end
 
   def empty_line?
-    self.strip == ""
+    self.strip.empty?
   end
 
   def scln
