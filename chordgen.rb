@@ -84,10 +84,10 @@ EOK
 end
 
 should_count_chords = ARGV.include? '--count-chords'
-should_print_syms = ARGV.include? '--print-syms'
-config_path = ARGV.include?('--config') ?
-                ARGV[ARGV.index('--config') + 1] :
-                './chords.ini'
+should_print_syms   = ARGV.include? '--print-syms'
+config_path         = ARGV.include?('--config') ?
+                        ARGV[ARGV.index('--config') + 1] :
+                        './chords.ini'
 
 class String
   def ini_header?
@@ -129,26 +129,29 @@ class Chord
   attr_reader :combo_event, :combo_array, :combo_key, :case_expr
 
   def initialize(left_hand, right_hand)
-    $chord_count += 1
-    result_is_kc = not(left_hand.in_parens?
-                       or ($syms.include?(left_hand)
-                           and kc(left_hand).in_parens?))
+    $chord_count  += 1
+    result_is_kc   = not(left_hand.in_parens? or
+                         ($syms.include?(left_hand) and
+                          kc(left_hand).in_parens?))
 
-    result    = result_is_kc ?
-                  "tap_code16(#{kc left_hand});\n" :
-                  left_hand.sans_parens
-    result_id = result.hash.abs.to_s
+    result         = result_is_kc ?
+                       "tap_code16(#{kc left_hand});\n" :
+                       left_hand.sans_parens
+    result_id      = result.hash.abs.to_s
 
     combo_event_id = "combo_event_#{result_id}"
     combo_array_id = "combo_array_#{result_id}"
-    keys = right_hand.chars.map { |k| kc k }
+    keys           = right_hand.chars.map { |k| kc k }
 
-    @combo_event = "#{combo_event_id}, //#{result.chomp}\n  "
-    @combo_array = brace_expr("const uint16_t PROGMEM #{combo_array_id}[] =",
-                              "#{keys.join(', ')}, COMBO_END").scln
-    @combo_key   = "[#{combo_event_id}] = COMBO_ACTION(#{combo_array_id}),\n  "
-    @case_expr = brace_expr("    case #{combo_event_id}:",
-                            brace_expr('      if (pressed)', result) + "break;")
+    @combo_event   = "#{combo_event_id}, //#{result.chomp}\n  "
+    @combo_array   =
+      brace_expr("const uint16_t PROGMEM #{combo_array_id}[] =",
+                 "#{keys.join(', ')}, COMBO_END").scln
+    @combo_key     =
+      "[#{combo_event_id}] = COMBO_ACTION(#{combo_array_id}),\n  "
+    @case_expr     =
+      brace_expr("    case #{combo_event_id}:",
+                 brace_expr('      if (pressed)', result) + "break;")
   end
 end
 
