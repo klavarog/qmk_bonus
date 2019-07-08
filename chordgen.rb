@@ -188,7 +188,7 @@ class ChordedKeeb
 
     @process_combo_event =
       brace_expr('void process_combo_event(uint8_t combo_index, bool pressed)',
-                 layers.map(&:combo_switch).join(' '))
+                 layers.map(&:combo_switch).join(' else '))
   end
 
   def as_string
