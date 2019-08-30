@@ -82,7 +82,7 @@ This macro accepts these parameters:
 - `mods`
   Bitmask of modifiers that will be turned on when the key is pressed. You can compose it like this: `(MOD1) | (MOD2)`, etc.
 - `kc`
-  This keycode will be sent if is not `KC_NO` and the key press time is lower than `LAYERMODE_TAP`.
+  This keycode will be sent if the key press time is lower than `LAYERMODE_TAP`.
 
 These are accepted modifiers:
 
