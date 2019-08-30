@@ -4,6 +4,7 @@ This library makes creating such buttons in QMK that can
 
 1. Trigger a modifier when pressed and return to previous modifier state when depressed,
 2. Turn a layer on when pressed and return to previous layer state when depressed.
+3. Tap a keycode when the key is briefly pressed.
 
 ```c
 #ifndef KLAVAROG_LAYERMODE
@@ -126,32 +127,32 @@ For every layermode key use it like that:
 There are static variables that hold the state of the router. They could have been global variables but it's a bad practice to pollute the global namespace.
 
 ```c
-static bool router_active = false;
+static uint8_t keys_pressed = 0;
 static layer_state_t prev_layer_state = 0;
 static uint8_t prev_mods = 0;
 ```
 
-If this is the first layermode key pressed, it has to be marked. Also, the state of modifiers and layers is saved too, so the router can rewind to them after the last layermode key is released.
+If this is the first layermode key pressed save the state of modifiers and layers is, so the router can rewind to them after the last layermode key is released.
 
 ```c
-if (!router_active) {
-  router_active = true;
+if (0 == keys_pressed) {
   prev_layer_state = layer_state;
   prev_mods = get_mods();
 }
 ```
 
-If the key is pressed, apply the modifiers and layers.
+If the key is pressed, apply the modifiers and layers. Also, increment the counter.
 
 ```c
 if (record->event.pressed) {
   *timer = timer_read();
   layer_on(layers);
   add_mods(mods);
+  keys_pressed++;
 }
 ```
 
-If the key is released, rewind! Also, if the passed `kc` has to be pressed, press it. It depends on `LAYERMODE_TAP`, which defaults to `300`. 
+If the key is released, rewind! Also, if the passed `kc` has to be pressed, press it. It depends on `LAYERMODE_TAP`, which defaults to `300`. Of course, decrement the counter.
 
 **NB.** The modifiers and layers flash (turn on and off for an instant) if you just press the key. It can mess up some applications that do something when a modifier key is pressed. Look out for the `Alt` key in Firefox. Perhaps, `Win` key may trigger the Start menu in Windows.
 
@@ -159,6 +160,7 @@ If the key is released, rewind! Also, if the passed `kc` has to be pressed, pres
 else {
   layer_off(layers);
   del_mods(mods);
+  keys_pressed--;
 #ifdef LAYERMODE_TAP
   if (timer_elapsed(*timer) < LAYERMODE_TAP)
 #else
@@ -168,4 +170,18 @@ else {
 }
 ```
 
+If the last key is released, rewind to previous state.
+
+```c
+if (0 == keys_pressed) {
+  layer_state = prev_layer_state;
+  set_mods(prev_mods);
+}
+```
+
+## P. S.
+
+```c
+#endif
+```
 
