@@ -80,6 +80,8 @@ This macro accepts these parameters:
   Bitmask of layers that will be turned on when the key is pressed. You can compose it like this: `(1 << LAYER1) | (1 << LAYER2)`, etc.
 - `mods`
   Bitmask of modifiers that will be turned on when the key is pressed. You can compose it like this: `(MOD1) | (MOD2)`, etc.
+- `kc`
+  This keycode will be sent if is not `KC_NO` and the key press time is lower than `LAYERMODE_TAP`.
 
 These are accepted modifiers:
 
@@ -119,8 +121,51 @@ For every layermode key use it like that:
 - `keyrecord_t *record`
 - `layer_state_t layers`
 - `uint8_t mods`
+- `uint16_t kc`
 
+There are static variables that hold the state of the router. They could have been global variables but it's a bad practice to pollute the global namespace.
 
 ```c
-// TODO.
+static bool router_active = false;
+static layer_state_t prev_layer_state = 0;
+static uint8_t prev_mods = 0;
 ```
+
+If this is the first layermode key pressed, it has to be marked. Also, the state of modifiers and layers is saved too, so the router can rewind to them after the last layermode key is released.
+
+```c
+if (!router_active) {
+  router_active = true;
+  prev_layer_state = layer_state;
+  prev_mods = get_mods();
+}
+```
+
+If the key is pressed, apply the modifiers and layers.
+
+```c
+if (record->event.pressed) {
+  *timer = timer_read();
+  layer_on(layers);
+  add_mods(mods);
+}
+```
+
+If the key is released, rewind! Also, if the passed `kc` has to be pressed, press it. It depends on `LAYERMODE_TAP`, which defaults to `300`. 
+
+**NB.** The modifiers and layers flash (turn on and off for an instant) if you just press the key. It can mess up some applications that do something when a modifier key is pressed. Look out for the `Alt` key in Firefox. Perhaps, `Win` key may trigger the Start menu in Windows.
+
+```c
+else {
+  layer_off(layers);
+  del_mods(mods);
+#ifdef LAYERMODE_TAP
+  if (timer_elapsed(*timer) < LAYERMODE_TAP)
+#else
+  if (timer_elapsed(*timer) < 300)
+#endif
+    tap_code16(kc);
+}
+```
+
+
