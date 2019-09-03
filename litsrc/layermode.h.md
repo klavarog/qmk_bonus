@@ -7,15 +7,14 @@ This library makes creating such buttons in QMK that can
 3. Tap a keycode when the key is briefly pressed.
 
 ```c
-#ifndef KLAVAROG_LAYERMODE
-#define KLAVAROG_LAYERMODE
+#pragma once
 ```
 
 The code is based on the code fetched from [Sequira source code](https://github.com/bouncepaw/sequira).
 
 ## Usage
 
-First, include code tangled from this file. It is saved in file `layermode.h` in the root directory of this repository. Feel free to use it.
+First, include code tangled from this file. It is saved in file `layermode.h` in the root directory of this repository, copy it to the same directory as your keymap file. Feel free to use it.
 
     // In your keymap file:
     #include "layermode.h"
@@ -28,7 +27,7 @@ Second, declare custom keycodes. One custom keycode for each key that you want t
       ALT_NUM,
     };
 
-The `SAFE_RANGE` part is very important. Also, the enum must be named `custom_key`.
+The `SAFE_RANGE` part is very important. You can name it any way.
 
 Third, add the keycodes to your layout. There is nothing special about it:
 
@@ -79,12 +78,14 @@ This macro accepts these parameters:
   Custom keycode you declared.
 - `layers`
   Bitmask of layers that will be turned on when the key is pressed. You can compose it like this: `(1 << LAYER1) | (1 << LAYER2)`, etc.
+- `should_invert_layers`
+  If this is `true`, layers will be turned off instead.
 - `mods`
   Bitmask of modifiers that will be turned on when the key is pressed. You can compose it like this: `(MOD1) | (MOD2)`, etc.
 - `kc`
   This keycode will be sent if the key press time is lower than `LAYERMODE_TAP`.
 
-These are accepted modifiers:
+These are accepted modifiers (you'll have to wrap them in `MOD_BIT` as in an example below):
 
 | Value    | Meaning |
 |----------|---------|
@@ -103,25 +104,25 @@ The macro itself just calls function `layermode_router`. It is defined later. If
 
 ```c
 case name:
-  layermode_router(ck, &timer_##ck, record, layers, mods);
+  layermode_router(&timer_##ck, record, layers, mods, should_invert_layers, kc);
   return false
 ```
 
 For every layermode key use it like that:
 
-    KEYMATCH(CTRL_NUM, (1 << NUM), MOD_LCTL);
-    KEYMATCH(ALT_NUM,  (1 << NUM), MOD_LALT);
+    KEYMATCH(CTRL_NUM, (1 << NUM), false, MOD_BIT(MOD_LCTL), KC_NO);
+    KEYMATCH(ALT_NUM,  (1 << NUM), false, MOD_BIT(MOD_LALT), KC_1);
 
 ## Details
 
 ### fn layermode_router
 > void
 
-- `enum custom_key ck`
 - `uint16_t *timer`
 - `keyrecord_t *record`
 - `layer_state_t layers`
 - `uint8_t mods`
+- `bool should_invert_layers`
 - `uint16_t kc`
 
 There are static variables that hold the state of the router. They could have been global variables but it's a bad practice to pollute the global namespace.
@@ -146,7 +147,7 @@ If the key is pressed, apply the modifiers and layers. Also, increment the count
 ```c
 if (record->event.pressed) {
   *timer = timer_read();
-  layer_on(layers);
+  should_invert_layers ? layer_and(~layers) : layer_or(layers);
   add_mods(mods);
   keys_pressed++;
 }
@@ -158,7 +159,7 @@ If the key is released, rewind! Also, if the passed `kc` has to be pressed, pres
 
 ```c
 else {
-  layer_off(layers);
+  should_invert_layers ? layer_or(layers) : layer_and(~layers);
   del_mods(mods);
   keys_pressed--;
 #ifdef LAYERMODE_TAP
@@ -177,11 +178,5 @@ if (0 == keys_pressed) {
   layer_state = prev_layer_state;
   set_mods(prev_mods);
 }
-```
-
-## P. S.
-
-```c
-#endif
 ```
 

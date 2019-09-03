@@ -1,13 +1,13 @@
-#ifndef KLAVAROG_LAYERMODE
-#define KLAVAROG_LAYERMODE
+#pragma once
 #define KEYTIMER(name) static uint16_t timer_##name
-#define KEYMATCH(ck, layers, mods, kc)\
+#define KEYMATCH(ck, layers, should_invert_layers, mods, kc)\
 case name:\
-  layermode_router(ck, &timer_##ck, record, layers, mods);\
+  layermode_router(&timer_##ck, record, layers, mods, should_invert_layers, kc);\
   return false
 void
-layermode_router (enum custom_key ck, uint16_t * timer, keyrecord_t * record,
-		  layer_state_t layers, uint8_t mods, uint16_t kc)
+layermode_router (uint16_t * timer, keyrecord_t * record,
+		  layer_state_t layers, uint8_t mods,
+		  bool should_invert_layers, uint16_t kc)
 {
   static uint8_t keys_pressed = 0;
   static layer_state_t prev_layer_state = 0;
@@ -20,13 +20,13 @@ layermode_router (enum custom_key ck, uint16_t * timer, keyrecord_t * record,
   if (record->event.pressed)
     {
       *timer = timer_read ();
-      layer_on (layers);
+      should_invert_layers ? layer_and (~layers) : layer_or (layers);
       add_mods (mods);
       keys_pressed++;
     }
   else
     {
-      layer_off (layers);
+      should_invert_layers ? layer_or (layers) : layer_and (~layers);
       del_mods (mods);
       keys_pressed--;
 #ifdef LAYERMODE_TAP
@@ -43,4 +43,3 @@ layermode_router (enum custom_key ck, uint16_t * timer, keyrecord_t * record,
     }
 
 }
-#endif
