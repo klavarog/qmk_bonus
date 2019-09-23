@@ -80,38 +80,23 @@ This macro accepts these parameters:
   Bitmask of layers that will be turned on when the key is pressed. You can compose it like this: `(1 << LAYER1) | (1 << LAYER2)`, etc.
 - `should_invert_layers`
   If this is `true`, layers will be turned off instead.
-- `mods`
-  Bitmask of modifiers that will be turned on when the key is pressed. You can compose it like this: `(MOD1) | (MOD2)`, etc.
+- `mod`
+  Bitmask of keys that will be turned on when the key is pressed.
 - `kc`
   This keycode will be sent if the key press time is lower than `LAYERMODE_TAP`.
-
-These are accepted modifiers (you'll have to wrap them in `MOD_BIT` as in an example below):
-
-| Value    | Meaning |
-|----------|---------|
-| MOD_LCTL | Left Control |
-| MOD_LSFT | Left Shift |
-| MOD_LALT | Left Alt |
-| MOD_LGUI | Left GUI (Windows/Command/Meta key) |
-| MOD_RCTL | Right Control |
-| MOD_RSFT | Right Shift |
-| MOD_RALT | Right Alt (AltGr) |
-| MOD_RGUI | Right GUI (Windows/Command/Meta key) |
-| MOD_HYPR | Hyper (Left Control, Shift, Alt and GUI) |
-| MOD_MEH  | Meh (Left Control, Shift, and Alt) |
 
 The macro itself just calls function `layermode_router`. It is defined later. If you are just reading this document for usage guide, you may ignore its definition.
 
 ```c
 case name:
-  layermode_router(&timer_##ck, record, layers, mods, should_invert_layers, kc);
+  layermode_router(&timer_##ck, record, layers, mod, should_invert_layers, kc);
   return false
 ```
 
 For every layermode key use it like that:
 
-    KEYMATCH(CTRL_NUM, (1 << NUM), false, MOD_BIT(MOD_LCTL), KC_NO);
-    KEYMATCH(ALT_NUM,  (1 << NUM), false, MOD_BIT(MOD_LALT), KC_1);
+    KEYMATCH(CTRL_NUM, (1 << NUM), false, KC_LCTL, KC_NO);
+    KEYMATCH(ALT_NUM,  (1 << NUM), false, KC_LALT, KC_1);
 
 ## Details
 
@@ -121,7 +106,7 @@ For every layermode key use it like that:
 - `uint16_t *timer`
 - `keyrecord_t *record`
 - `layer_state_t layers`
-- `uint8_t mods`
+- `uint16_t mod`
 - `bool should_invert_layers`
 - `uint16_t kc`
 
@@ -130,16 +115,13 @@ There are static variables that hold the state of the router. They could have be
 ```c
 static uint8_t keys_pressed = 0;
 static layer_state_t prev_layer_state = 0;
-static uint8_t prev_mods = 0;
 ```
 
 If this is the first layermode key pressed save the state of modifiers and layers is, so the router can rewind to them after the last layermode key is released.
 
 ```c
-if (0 == keys_pressed) {
+if (0 == keys_pressed)
   prev_layer_state = layer_state;
-  prev_mods = get_mods();
-}
 ```
 
 If the key is pressed, apply the modifiers and layers. Also, increment the counter.
@@ -148,7 +130,7 @@ If the key is pressed, apply the modifiers and layers. Also, increment the count
 if (record->event.pressed) {
   *timer = timer_read();
   should_invert_layers ? layer_and(~layers) : layer_or(layers);
-  add_mods(mods);
+  register_code16(mod);
   keys_pressed++;
 }
 ```
@@ -160,7 +142,7 @@ If the key is released, rewind! Also, if the passed `kc` has to be pressed, pres
 ```c
 else {
   should_invert_layers ? layer_or(layers) : layer_and(~layers);
-  del_mods(mods);
+  unregister_code16(mod);
   keys_pressed--;
 #ifdef LAYERMODE_TAP
   if (timer_elapsed(*timer) < LAYERMODE_TAP)
@@ -174,9 +156,7 @@ else {
 If the last key is released, rewind to previous state.
 
 ```c
-if (0 == keys_pressed) {
-  layer_state = prev_layer_state;
-  set_mods(prev_mods);
-}
+if (0 == keys_pressed)
+  layer_state_set(prev_layer_state);
 ```
 
